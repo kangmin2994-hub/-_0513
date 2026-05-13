@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, LogOut, Package, Heart, Star } from 'lucide-react'
+import { ChevronRight, LogOut, Package, Heart, Star, Pencil, Check, X } from 'lucide-react'
 import Header from '@/components/Header'
 import BottomNav from '@/components/BottomNav'
 import { supabase, Profile, formatPrice } from '@/lib/supabase'
@@ -12,6 +12,10 @@ export default function MyPage() {
   const [myProducts, setMyProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'selling' | 'done'>('selling')
+  const [editingNickname, setEditingNickname] = useState(false)
+  const [newNickname, setNewNickname] = useState('')
+  const [savingNickname, setSavingNickname] = useState(false)
+  const nicknameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { init() }, [])
 
@@ -28,6 +32,30 @@ export default function MyPage() {
   const logout = async () => {
     await supabase.auth.signOut()
     router.push('/auth')
+  }
+
+  const startEditNickname = () => {
+    setNewNickname(profile?.nickname || '')
+    setEditingNickname(true)
+    setTimeout(() => nicknameInputRef.current?.focus(), 50)
+  }
+
+  const cancelEditNickname = () => {
+    setEditingNickname(false)
+    setNewNickname('')
+  }
+
+  const saveNickname = async () => {
+    if (!newNickname.trim() || newNickname.trim() === profile?.nickname) {
+      cancelEditNickname()
+      return
+    }
+    setSavingNickname(true)
+    const { data: user } = await supabase.auth.getUser()
+    await supabase.from('profiles').update({ nickname: newNickname.trim() }).eq('id', user.user!.id)
+    setProfile(prev => prev ? { ...prev, nickname: newNickname.trim() } : prev)
+    setEditingNickname(false)
+    setSavingNickname(false)
   }
 
   const filtered = myProducts.filter(p => tab === 'selling' ? p.status !== '거래완료' : p.status === '거래완료')
@@ -47,7 +75,37 @@ export default function MyPage() {
             {profile?.avatar_url ? <img src={profile.avatar_url} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : '🍠'}
           </div>
           <div style={{ flex: 1 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px' }}>{profile?.nickname}</h2>
+            {editingNickname ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <input
+                  ref={nicknameInputRef}
+                  value={newNickname}
+                  onChange={e => setNewNickname(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveNickname(); if (e.key === 'Escape') cancelEditNickname() }}
+                  maxLength={20}
+                  style={{
+                    fontSize: 18, fontWeight: 700, border: 'none', borderBottom: '2px solid #FF6B35',
+                    outline: 'none', padding: '2px 4px', width: '100%', background: 'transparent',
+                  }}
+                />
+                <button onClick={saveNickname} disabled={savingNickname}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+                  <Check size={18} color="#FF6B35" />
+                </button>
+                <button onClick={cancelEditNickname}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+                  <X size={18} color="#AAAAAA" />
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>{profile?.nickname}</h2>
+                <button onClick={startEditNickname}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', alignItems: 'center' }}>
+                  <Pencil size={15} color="#AAAAAA" />
+                </button>
+              </div>
+            )}
             <p style={{ fontSize: 14, color: '#767676', margin: 0 }}>📍 {profile?.location}</p>
           </div>
           <div style={{ textAlign: 'center' }}>

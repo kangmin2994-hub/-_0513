@@ -15,28 +15,40 @@ export default function ChatRoomPage() {
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { init() }, [id])
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  useEffect(() => {
+    let mounted = true
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-  const init = async () => {
-    const { data } = await supabase.auth.getUser()
-    if (!data.user) { router.push('/auth'); return }
-    setUserId(data.user.id)
-    fetchRoom(data.user.id)
-    fetchMessages()
-    const sub = supabase.channel(`room-${id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${id}` },
-        payload => setMessages(prev => [...prev, payload.new]))
-      .subscribe()
-    return () => { supabase.removeChannel(sub) }
-  }
+    const init = async () => {
+      const { data } = await supabase.auth.getUser()
+      if (!data.user || !mounted) return
+      setUserId(data.user.id)
+      fetchRoom(data.user.id)
+      fetchMessages()
+
+      const channelName = `room-${id}-${Date.now()}`
+      channel = supabase.channel(channelName)
+      channel
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${id}` },
+          payload => { if (mounted) setMessages(prev => [...prev, payload.new]) })
+        .subscribe()
+    }
+
+    init()
+    return () => {
+      mounted = false
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [id])
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   const fetchRoom = async (uid: string) => {
     const { data } = await supabase
       .from('chat_rooms')
       .select('*, products(title, image_urls, price, status), buyer:profiles!chat_rooms_buyer_id_fkey(nickname), seller:profiles!chat_rooms_seller_id_fkey(nickname)')
-      .eq('id', id)
-      .single()
+      .eq('id', Number(id))
+      .maybeSingle()
     if (data) setRoom(data)
   }
 
@@ -44,7 +56,7 @@ export default function ChatRoomPage() {
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .eq('room_id', id)
+      .eq('room_id', Number(id))
       .order('created_at', { ascending: true })
     if (data) setMessages(data)
   }
@@ -52,8 +64,18 @@ export default function ChatRoomPage() {
   const sendMessage = async () => {
     if (!input.trim() || !userId || sending) return
     setSending(true)
-    await supabase.from('messages').insert({ room_id: id, sender_id: userId, content: input.trim() })
-    setInput('')
+    const { error } = await supabase.from('messages').insert({
+      room_id: Number(id),
+      sender_id: userId,
+      content: input.trim(),
+      is_read: false,
+    })
+    if (error) {
+      console.error('메시지 전송 실패:', error.message)
+      alert('메시지 전송에 실패했어요: ' + error.message)
+    } else {
+      setInput('')
+    }
     setSending(false)
   }
 

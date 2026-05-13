@@ -3,9 +3,8 @@ import Link from 'next/link'
 import { Heart, MessageCircle } from 'lucide-react'
 import { Product, formatPrice, formatDate } from '@/lib/supabase'
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product, isMyProduct }: { product: Product; isMyProduct?: boolean }) {
   const statusLabel = { 판매중: null, 예약중: '예약중', 거래완료: '거래완료' }[product.status]
-  const badgeClass = { 판매중: '', 예약중: 'badge-reserve', 거래완료: 'badge-done' }[product.status]
 
   return (
     <Link href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -33,7 +32,17 @@ export default function ProductCard({ product }: { product: Product }) {
               {product.categories?.icon || '📦'}
             </div>
           )}
-          {statusLabel && (
+          {isMyProduct && (
+            <div style={{
+              position: 'absolute', top: 6, left: 6,
+              background: '#74261e', color: 'white',
+              fontSize: 11, fontWeight: 700,
+              padding: '2px 6px', borderRadius: 4,
+            }}>
+              내 상품
+            </div>
+          )}
+          {!isMyProduct && statusLabel && (
             <div style={{
               position: 'absolute', top: 6, left: 6,
               background: product.status === '예약중' ? '#856404' : '#767676',

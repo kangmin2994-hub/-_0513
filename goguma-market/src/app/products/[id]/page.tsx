@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
         <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>{formatPrice(product.price)}</p>
         </div>
-        {currentUserId !== product.seller_id && product.status === '판매중' && (
+        {currentUserId !== product.seller_id && product.status !== '거래완료' && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={startChat} style={{
               background: 'white', color: '#FF6B35', border: '1.5px solid #FF6B35',
@@ -225,12 +225,14 @@ export default function ProductDetailPage() {
             }}>
               채팅하기
             </button>
-            <button onClick={() => setShowBuyModal(true)} style={{
-              background: '#FF6B35', color: 'white', border: 'none',
-              borderRadius: 8, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-            }}>
-              구매하기
-            </button>
+            {product.status === '판매중' && (
+              <button onClick={() => setShowBuyModal(true)} style={{
+                background: '#FF6B35', color: 'white', border: 'none',
+                borderRadius: 8, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              }}>
+                구매하기
+              </button>
+            )}
           </div>
         )}
       </div>

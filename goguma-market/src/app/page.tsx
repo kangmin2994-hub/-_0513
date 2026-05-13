@@ -13,9 +13,15 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [myUserId, setMyUserId] = useState<string | null>(null)
 
-  useEffect(() => { fetchCategories(); fetchUnreadCount() }, [])
+  useEffect(() => { fetchCategories(); fetchUnreadCount(); fetchMyId() }, [])
   useEffect(() => { fetchProducts() }, [selectedCategory])
+
+  const fetchMyId = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) setMyUserId(user.id)
+  }
 
   const fetchUnreadCount = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -145,7 +151,7 @@ export default function HomePage() {
             <p style={{ fontSize: 14 }}>첫 번째로 물건을 올려보세요!</p>
           </div>
         ) : (
-          products.map(p => <ProductCard key={p.id} product={p} />)
+          products.map(p => <ProductCard key={p.id} product={p} isMyProduct={myUserId === p.seller_id} />)
         )}
       </div>
 

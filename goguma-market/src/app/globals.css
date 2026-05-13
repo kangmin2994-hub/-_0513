@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #FF6B35;
+  --primary-dark: #E85A25;
+  --primary-light: #FFF0EB;
+  --bg: #F8F8F8;
+  --surface: #FFFFFF;
+  --border: #EBEBEB;
+  --text: #1A1A1A;
+  --text-secondary: #767676;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; scrollbar-width: none; }
+
+.page-content { padding-bottom: 70px; }
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+
+.input-field {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+  background: white;
+}
+.input-field:focus { border-color: var(--primary); }
+
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.badge-sale { background: var(--primary-light); color: var(--primary); }
+.badge-reserve { background: #FFF3CD; color: #856404; }
+.badge-done { background: #F0F0F0; color: #767676; }
+
+.divider { height: 8px; background: var(--bg); margin: 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 24px; height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}

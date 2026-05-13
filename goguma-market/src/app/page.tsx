@@ -119,10 +119,10 @@ export default function HomePage() {
                   {cat.icon}
                 </div>
                 <span style={{
-                  fontSize: 11, fontWeight: active ? 700 : 400,
+                  fontSize: 13, fontWeight: 700,
                   color: active ? '#FF6B35' : '#555',
                   textAlign: 'center', lineHeight: 1.2,
-                  fontFamily: "'NostalgicMongtori', sans-serif",
+                  fontFamily: "'WanjuDaedunsan', sans-serif",
                 }}>
                   {cat.name}
                 </span>

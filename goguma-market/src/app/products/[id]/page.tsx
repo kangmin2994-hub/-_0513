@@ -14,6 +14,8 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [imgIndex, setImgIndex] = useState(0)
+  const [showBuyModal, setShowBuyModal] = useState(false)
+  const [buying, setBuying] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -52,22 +54,45 @@ export default function ProductDetailPage() {
     setLiked(!liked)
   }
 
-  const startChat = async () => {
-    if (!currentUserId) { router.push('/auth'); return }
-    if (currentUserId === product?.seller_id) return
+  const getOrCreateRoom = async () => {
+    if (!currentUserId || !product) return null
     const { data: existing } = await supabase
       .from('chat_rooms')
       .select('id')
       .eq('product_id', id)
       .eq('buyer_id', currentUserId)
       .single()
-    if (existing) { router.push(`/chat/${existing.id}`); return }
+    if (existing) return existing.id
     const { data: newRoom } = await supabase
       .from('chat_rooms')
-      .insert({ product_id: id, buyer_id: currentUserId, seller_id: product?.seller_id })
+      .insert({ product_id: id, buyer_id: currentUserId, seller_id: product.seller_id })
       .select('id')
       .single()
-    if (newRoom) router.push(`/chat/${newRoom.id}`)
+    return newRoom?.id ?? null
+  }
+
+  const startChat = async () => {
+    if (!currentUserId) { router.push('/auth'); return }
+    if (currentUserId === product?.seller_id) return
+    const roomId = await getOrCreateRoom()
+    if (roomId) router.push(`/chat/${roomId}`)
+  }
+
+  const confirmBuy = async () => {
+    if (!currentUserId) { router.push('/auth'); return }
+    setBuying(true)
+    const roomId = await getOrCreateRoom()
+    if (roomId) {
+      await supabase.from('messages').insert({
+        room_id: roomId,
+        sender_id: currentUserId,
+        content: `안녕하세요! "${product?.title}" 구매하고 싶어요. 거래 가능할까요? 😊`,
+        is_read: false,
+      })
+      setShowBuyModal(false)
+      router.push(`/chat/${roomId}`)
+    }
+    setBuying(false)
   }
 
   const statusColor = { 판매중: '#FF6B35', 예약중: '#856404', 거래완료: '#767676' }
@@ -193,14 +218,83 @@ export default function ProductDetailPage() {
           <p style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>{formatPrice(product.price)}</p>
         </div>
         {currentUserId !== product.seller_id && product.status === '판매중' && (
-          <button onClick={startChat} style={{
-            background: '#FF6B35', color: 'white', border: 'none',
-            borderRadius: 8, padding: '12px 24px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-          }}>
-            채팅하기
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={startChat} style={{
+              background: 'white', color: '#FF6B35', border: '1.5px solid #FF6B35',
+              borderRadius: 8, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            }}>
+              채팅하기
+            </button>
+            <button onClick={() => setShowBuyModal(true)} style={{
+              background: '#FF6B35', color: 'white', border: 'none',
+              borderRadius: 8, padding: '12px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            }}>
+              구매하기
+            </button>
+          </div>
         )}
       </div>
+
+      {/* 구매 확인 모달 */}
+      {showBuyModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }} onClick={() => setShowBuyModal(false)}>
+          <div style={{
+            width: '100%', maxWidth: 480, background: 'white',
+            borderRadius: '20px 20px 0 0', padding: '28px 20px 40px',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E0E0E0', margin: '0 auto 24px' }} />
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>구매하기</h2>
+            <p style={{ fontSize: 14, color: '#767676', margin: '0 0 20px' }}>
+              판매자에게 구매 의사를 전달하고 채팅을 시작합니다.
+            </p>
+
+            {/* 상품 요약 */}
+            <div style={{
+              display: 'flex', gap: 12, padding: 14,
+              background: '#F8F8F8', borderRadius: 12, marginBottom: 24,
+            }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 8, background: '#F0F0F0',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 26, flexShrink: 0, overflow: 'hidden',
+              }}>
+                {product.image_urls?.[0]
+                  ? <img src={product.image_urls[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : product.categories?.icon || '📦'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {product.title}
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, margin: 0, color: '#1A1A1A' }}>
+                  {formatPrice(product.price)}
+                </p>
+                <p style={{ fontSize: 12, color: '#AAAAAA', margin: '2px 0 0' }}>
+                  판매자: {product.profiles?.nickname}
+                </p>
+              </div>
+            </div>
+
+            <button onClick={confirmBuy} disabled={buying} style={{
+              width: '100%', padding: '16px', background: buying ? '#FFAA88' : '#FF6B35',
+              color: 'white', border: 'none', borderRadius: 12,
+              fontSize: 16, fontWeight: 700, cursor: buying ? 'not-allowed' : 'pointer',
+            }}>
+              {buying ? '처리 중...' : '구매 의사 전달하기'}
+            </button>
+            <button onClick={() => setShowBuyModal(false)} style={{
+              width: '100%', padding: '14px', background: 'none',
+              color: '#767676', border: 'none', fontSize: 15, cursor: 'pointer', marginTop: 8,
+            }}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

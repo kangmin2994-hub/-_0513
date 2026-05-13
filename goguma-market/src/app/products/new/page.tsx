@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Camera, X } from 'lucide-react'
 import Header from '@/components/Header'
@@ -9,6 +9,8 @@ export default function NewProductPage() {
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [images, setImages] = useState<{ file: File; preview: string }[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     title: '', price: '', description: '',
     category_id: '', condition: '사용감있음' as '미사용' | '거의새것' | '사용감있음',
@@ -31,12 +33,48 @@ export default function NewProductPage() {
     if (data) setCategories(data)
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const remaining = 10 - images.length
+    const toAdd = files.slice(0, remaining).map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }))
+    setImages(prev => [...prev, ...toAdd])
+    e.target.value = ''
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      URL.revokeObjectURL(prev[index].preview)
+      return prev.filter((_, i) => i !== index)
+    })
+  }
+
+  const uploadImages = async (userId: string): Promise<string[]> => {
+    const urls: string[] = []
+    for (const { file } of images) {
+      const ext = file.name.split('.').pop()
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage
+        .from('product-images')
+        .upload(path, file, { upsert: false })
+      if (!error) {
+        const { data } = supabase.storage.from('product-images').getPublicUrl(path)
+        urls.push(data.publicUrl)
+      }
+    }
+    return urls
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.title || !form.price) return
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
+
+    const imageUrls = await uploadImages(user.id)
 
     const { data, error } = await supabase.from('products').insert({
       seller_id: user.id,
@@ -48,7 +86,7 @@ export default function NewProductPage() {
       trade_type: form.trade_type,
       allow_price_offer: form.allow_price_offer,
       location: form.location,
-      image_urls: [],
+      image_urls: imageUrls,
     }).select('id').single()
 
     setLoading(false)
@@ -67,14 +105,52 @@ export default function NewProductPage() {
       <form onSubmit={handleSubmit} style={{ padding: 16, paddingBottom: 100 }}>
         {/* 사진 업로드 */}
         <div style={{ marginBottom: 20 }}>
-          <button type="button" style={{
-            width: 80, height: 80, border: '1.5px dashed #CCCCCC',
-            borderRadius: 8, background: '#F8F8F8', cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-          }}>
-            <Camera size={24} color="#AAAAAA" />
-            <span style={{ fontSize: 11, color: '#AAAAAA' }}>0/10</span>
-          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {/* 추가 버튼 */}
+            {images.length < 10 && (
+              <button type="button"
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: 80, height: 80, border: '1.5px dashed #CCCCCC', flexShrink: 0,
+                  borderRadius: 8, background: '#F8F8F8', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}>
+                <Camera size={24} color="#AAAAAA" />
+                <span style={{ fontSize: 11, color: '#AAAAAA' }}>{images.length}/10</span>
+              </button>
+            )}
+            {/* 미리보기 */}
+            {images.map((img, i) => (
+              <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                <img src={img.preview} alt=""
+                  style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'cover', border: '1px solid #EBEBEB' }} />
+                <button type="button" onClick={() => removeImage(i)}
+                  style={{
+                    position: 'absolute', top: -6, right: -6,
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: '#1A1A1A', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <X size={12} color="white" />
+                </button>
+                {i === 0 && (
+                  <span style={{
+                    position: 'absolute', bottom: 4, left: 4,
+                    fontSize: 10, background: 'rgba(0,0,0,0.55)', color: 'white',
+                    padding: '1px 5px', borderRadius: 4,
+                  }}>대표</span>
+                )}
+              </div>
+            ))}
+          </div>
           <p style={{ fontSize: 12, color: '#AAAAAA', marginTop: 6 }}>사진은 최대 10장까지 등록 가능해요</p>
         </div>
 

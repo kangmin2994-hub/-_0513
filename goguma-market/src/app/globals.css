@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'KerisKeduLine';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2601-3@1.0/KERISKEDU_Line.woff2') format('woff2');
+  font-weight: normal;
+  font-display: swap;
+}
+
 :root {
   --primary: #FF6B35;
   --primary-dark: #E85A25;
@@ -60,6 +67,15 @@ body {
 .badge-done { background: #F0F0F0; color: #767676; }
 
 .divider { height: 8px; background: var(--bg); margin: 0; }
+
+.product-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .spinner {

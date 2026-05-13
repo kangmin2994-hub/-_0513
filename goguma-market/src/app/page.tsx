@@ -68,7 +68,7 @@ export default function HomePage() {
             alt="고구마"
             style={{ width: 36, height: 36, objectFit: 'contain' }}
           />
-          <span style={{ fontSize: 22, fontWeight: 800, color: '#74261e', letterSpacing: '-0.5px' }}>고구마마켓</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: '#74261e', fontFamily: "'KerisKeduLine', sans-serif", letterSpacing: '0px' }}>고구마마켓</span>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           <button onClick={() => router.push('/search')} style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔍</button>

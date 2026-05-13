@@ -9,7 +9,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <Link href={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div style={{
+      <div className="product-card" style={{
         display: 'flex', gap: 14, padding: '16px',
         background: 'white', borderBottom: '1px solid #EBEBEB',
         cursor: 'pointer',

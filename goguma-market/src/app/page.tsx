@@ -1,18 +1,39 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import BottomNav from '@/components/BottomNav'
 import ProductCard from '@/components/ProductCard'
 import { supabase, Product, Category } from '@/lib/supabase'
 
 export default function HomePage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
+  const [unreadCount, setUnreadCount] = useState(0)
 
-  useEffect(() => { fetchCategories() }, [])
+  useEffect(() => { fetchCategories(); fetchUnreadCount() }, [])
   useEffect(() => { fetchProducts() }, [selectedCategory])
+
+  const fetchUnreadCount = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: rooms } = await supabase
+      .from('chat_rooms')
+      .select('id')
+      .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+    if (!rooms || rooms.length === 0) return
+    const roomIds = rooms.map((r: any) => r.id)
+    const { count } = await supabase
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .in('room_id', roomIds)
+      .neq('sender_id', user.id)
+      .eq('is_read', false)
+    setUnreadCount(count || 0)
+  }
 
   const fetchCategories = async () => {
     const { data } = await supabase.from('categories').select('*').order('id')
@@ -42,12 +63,33 @@ export default function HomePage() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 26 }}>🍠</span>
-          <span style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35', letterSpacing: '-0.5px' }}>고구마마켓</span>
+          <img
+            src="https://cdn.crowdpic.net/detail-thumb/thumb_d_7680BA8248CCF072ECD487231BBB233D.png"
+            alt="고구마"
+            style={{ width: 36, height: 36, objectFit: 'contain' }}
+          />
+          <span style={{ fontSize: 22, fontWeight: 800, color: '#74261e', letterSpacing: '-0.5px' }}>고구마마켓</span>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔍</button>
-          <button style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔔</button>
+          <button onClick={() => router.push('/search')} style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔍</button>
+          <button
+            onClick={() => router.push('/notifications')}
+            style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20, position: 'relative' }}
+          >
+            🔔
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: 4, right: 4,
+                minWidth: 16, height: 16, borderRadius: 8,
+                background: '#FF6B35', color: 'white',
+                fontSize: 10, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '0 3px',
+              }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -61,7 +103,7 @@ export default function HomePage() {
                 key={cat.id ?? 'all'}
                 onClick={() => setSelectedCategory(cat.id)}
                 style={{
-                  border: 'none', background: 'none', cursor: 'pointer',
+                  border: 'none', cursor: 'pointer',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
                   padding: '10px 4px', borderRadius: 10,
                   background: active ? '#FFF0EB' : 'transparent',

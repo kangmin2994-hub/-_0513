@@ -16,6 +16,9 @@ export default function ProductDetailPage() {
   const [imgIndex, setImgIndex] = useState(0)
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [buying, setBuying] = useState(false)
+  const [showOwnerMenu, setShowOwnerMenu] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -95,6 +98,12 @@ export default function ProductDetailPage() {
     setBuying(false)
   }
 
+  const handleDelete = async () => {
+    setDeleting(true)
+    await supabase.from('products').delete().eq('id', id)
+    router.push('/mypage/trades')
+  }
+
   const statusColor = { 판매중: '#FF6B35', 예약중: '#856404', 거래완료: '#767676' }
 
   if (loading) return (
@@ -120,12 +129,43 @@ export default function ProductDetailPage() {
         }}>
           <ChevronLeft size={20} color="white" />
         </button>
-        <button style={{
-          width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.4)',
-          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <MoreVertical size={20} color="white" />
-        </button>
+        {currentUserId === product?.seller_id && (
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowOwnerMenu(v => !v)}
+              style={{
+                width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.4)',
+                border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+              <MoreVertical size={20} color="white" />
+            </button>
+            {showOwnerMenu && (
+              <div style={{
+                position: 'absolute', top: 44, right: 0,
+                background: 'white', borderRadius: 12, overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)', minWidth: 130, zIndex: 100,
+              }}>
+                <button
+                  onClick={() => { setShowOwnerMenu(false); router.push(`/products/${id}/edit`) }}
+                  style={{
+                    width: '100%', padding: '14px 16px', border: 'none', background: 'none',
+                    textAlign: 'left', fontSize: 15, cursor: 'pointer', color: '#1A1A1A',
+                    display: 'block',
+                  }}
+                >✏️ 수정하기</button>
+                <div style={{ height: 1, background: '#F0F0F0' }} />
+                <button
+                  onClick={() => { setShowOwnerMenu(false); setShowDeleteConfirm(true) }}
+                  style={{
+                    width: '100%', padding: '14px 16px', border: 'none', background: 'none',
+                    textAlign: 'left', fontSize: 15, cursor: 'pointer', color: '#FF3B30',
+                    display: 'block',
+                  }}
+                >🗑️ 삭제하기</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 이미지 */}
@@ -236,6 +276,40 @@ export default function ProductDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 오너 메뉴 바깥 클릭 닫기 */}
+      {showOwnerMenu && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setShowOwnerMenu(false)} />
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }} onClick={() => setShowDeleteConfirm(false)}>
+          <div style={{
+            width: '100%', maxWidth: 320, background: 'white',
+            borderRadius: 16, padding: '28px 20px 20px', textAlign: 'center',
+          }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontSize: 40, marginBottom: 12 }}>🗑️</p>
+            <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>상품을 삭제할까요?</h3>
+            <p style={{ fontSize: 14, color: '#767676', margin: '0 0 24px' }}>삭제된 상품은 복구할 수 없어요.</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowDeleteConfirm(false)} style={{
+                flex: 1, padding: '13px', border: '1.5px solid #EBEBEB',
+                borderRadius: 10, fontSize: 15, cursor: 'pointer', background: 'white',
+              }}>취소</button>
+              <button onClick={handleDelete} disabled={deleting} style={{
+                flex: 1, padding: '13px', border: 'none',
+                borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                background: '#FF3B30', color: 'white',
+              }}>{deleting ? '삭제 중...' : '삭제'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 구매 확인 모달 */}
       {showBuyModal && (

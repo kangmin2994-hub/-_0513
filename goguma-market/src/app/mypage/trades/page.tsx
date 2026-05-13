@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Pencil, Trash2 } from 'lucide-react'
 import Header from '@/components/Header'
 import BottomNav from '@/components/BottomNav'
 import { supabase, formatPrice, formatDate } from '@/lib/supabase'
@@ -13,6 +14,8 @@ export default function TradesPage() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => { init() }, [])
   useEffect(() => { if (userId) fetchTrades() }, [tab, userId])
@@ -54,6 +57,15 @@ export default function TradesPage() {
     }
 
     setLoading(false)
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    await supabase.from('products').delete().eq('id', deleteTarget.id)
+    setProducts(prev => prev.filter(p => p.id !== deleteTarget.id))
+    setDeleteTarget(null)
+    setDeleting(false)
   }
 
   const tabs = [
@@ -106,16 +118,18 @@ export default function TradesPage() {
           </div>
         ) : (
           products.map((p, i) => (
-            <div key={p.id ?? i} onClick={() => router.push(`/products/${p.id}`)}
-              style={{ display: 'flex', gap: 14, padding: '16px', background: 'white', borderBottom: '1px solid #EBEBEB', cursor: 'pointer' }}>
+            <div key={p.id ?? i}
+              style={{ display: 'flex', gap: 14, padding: '16px', background: 'white', borderBottom: '1px solid #EBEBEB' }}>
               {/* 썸네일 */}
-              <div style={{ width: 80, height: 80, borderRadius: 10, background: '#F0F0F0', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>
+              <div
+                onClick={() => router.push(`/products/${p.id}`)}
+                style={{ width: 80, height: 80, borderRadius: 10, background: '#F0F0F0', flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, cursor: 'pointer' }}>
                 {p.image_urls?.[0]
                   ? <img src={p.image_urls[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : p.categories?.icon || '📦'}
               </div>
               {/* 정보 */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => router.push(`/products/${p.id}`)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{
                     fontSize: 11, padding: '2px 7px', borderRadius: 4, fontWeight: 700,
@@ -128,12 +142,71 @@ export default function TradesPage() {
                 <p style={{ fontSize: 15, fontWeight: 700, margin: 0, color: '#1A1A1A' }}>{formatPrice(p.price)}</p>
                 <p style={{ fontSize: 12, color: '#AAAAAA', margin: '4px 0 0' }}>{p.location}</p>
               </div>
+              {/* 판매중/예약중 탭에서만 수정/삭제 버튼 표시 */}
+              {tab === 'selling' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center', flexShrink: 0 }}>
+                  <button
+                    onClick={e => { e.stopPropagation(); router.push(`/products/${p.id}/edit`) }}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: '1.5px solid #EBEBEB',
+                      background: 'white', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    title="수정"
+                  >
+                    <Pencil size={16} color="#FF6B35" />
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); setDeleteTarget(p) }}
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, border: '1.5px solid #EBEBEB',
+                      background: 'white', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                    title="삭제"
+                  >
+                    <Trash2 size={16} color="#FF3B30" />
+                  </button>
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
 
       <BottomNav />
+
+      {/* 삭제 확인 모달 */}
+      {deleteTarget && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 200,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }} onClick={() => setDeleteTarget(null)}>
+          <div style={{
+            width: '100%', maxWidth: 320, background: 'white',
+            borderRadius: 16, padding: '28px 20px 20px', textAlign: 'center',
+          }} onClick={e => e.stopPropagation()}>
+            <p style={{ fontSize: 40, marginBottom: 12 }}>🗑️</p>
+            <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 8px' }}>상품을 삭제할까요?</h3>
+            <p style={{ fontSize: 14, color: '#767676', margin: '0 0 6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {deleteTarget.title}
+            </p>
+            <p style={{ fontSize: 13, color: '#AAAAAA', margin: '0 0 24px' }}>삭제된 상품은 복구할 수 없어요.</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setDeleteTarget(null)} style={{
+                flex: 1, padding: '13px', border: '1.5px solid #EBEBEB',
+                borderRadius: 10, fontSize: 15, cursor: 'pointer', background: 'white',
+              }}>취소</button>
+              <button onClick={handleDelete} disabled={deleting} style={{
+                flex: 1, padding: '13px', border: 'none',
+                borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                background: '#FF3B30', color: 'white',
+              }}>{deleting ? '삭제 중...' : '삭제'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 기초 설명</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4ff;
+      color: #222;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      color: white;
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+    header h1 { font-size: 48px; font-weight: 800; margin-bottom: 14px; }
+    header p { font-size: 18px; opacity: 0.8; max-width: 600px; margin: 0 auto; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 60px 20px; }
+
+    /* 섹션 공통 */
+    section { margin-bottom: 60px; }
+    section h2 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    section h2 .icon {
+      width: 36px; height: 36px;
+      background: #0f3460;
+      color: white;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    /* AI란? */
+    .what-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .what-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .what-card.highlight {
+      background: linear-gradient(135deg, #0f3460, #533483);
+      color: white;
+      grid-column: span 2;
+    }
+    .what-card.highlight p { font-size: 18px; line-height: 1.8; opacity: 0.95; }
+    .what-card h3 { font-size: 16px; color: #0f3460; margin-bottom: 10px; font-weight: 700; }
+    .what-card.highlight h3 { color: rgba(255,255,255,0.7); }
+    .what-card p { font-size: 15px; line-height: 1.7; color: #555; }
+
+    /* AI 3대 요소 */
+    .trio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .trio-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border-top: 4px solid;
+    }
+    .trio-card:nth-child(1) { border-color: #e63946; }
+    .trio-card:nth-child(2) { border-color: #f4a261; }
+    .trio-card:nth-child(3) { border-color: #2a9d8f; }
+    .trio-card .emoji { font-size: 40px; margin-bottom: 16px; }
+    .trio-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .trio-card p { font-size: 14px; color: #666; line-height: 1.7; }
+
+    /* AI 종류 */
+    .type-list { display: flex; flex-direction: column; gap: 16px; }
+    .type-item {
+      background: white;
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .type-num {
+      min-width: 40px; height: 40px;
+      background: #0f3460;
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px;
+    }
+    .type-item h3 { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .type-item p { font-size: 14px; color: #666; line-height: 1.6; }
+    .tag {
+      display: inline-block;
+      background: #e8eeff;
+      color: #0f3460;
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+      margin-right: 4px;
+    }
+
+    /* 활용 사례 */
+    .cases {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .case-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .case-card .icon { font-size: 36px; margin-bottom: 12px; }
+    .case-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .case-card p { font-size: 13px; color: #777; line-height: 1.6; }
+
+    /* AI vs 인간 */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .compare-card {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .compare-card h3 {
+      font-size: 18px; font-weight: 700; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 2px solid #f0f0f0;
+    }
+    .compare-card.ai h3 { color: #0f3460; }
+    .compare-card.human h3 { color: #e63946; }
+    .compare-card ul { list-style: none; }
+    .compare-card ul li {
+      font-size: 14px; color: #555; padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .compare-card ul li::before { content: '✓'; font-weight: 700; }
+    .compare-card.ai ul li::before { color: #0f3460; }
+    .compare-card.human ul li::before { color: #e63946; }
+
+    /* 핵심 용어 */
+    .terms {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .term-card {
+      background: white;
+      border-radius: 14px;
+      padding: 22px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border-left: 4px solid #0f3460;
+    }
+    .term-card h3 { font-size: 16px; font-weight: 700; color: #0f3460; margin-bottom: 8px; }
+    .term-card p { font-size: 14px; color: #666; line-height: 1.6; }
+
+    /* 요약 */
+    .summary {
+      background: linear-gradient(135deg, #1a1a2e, #0f3460);
+      color: white;
+      border-radius: 20px;
+      padding: 48px;
+      text-align: center;
+    }
+    .summary h2 { font-size: 28px; margin-bottom: 20px; color: white; }
+    .summary p { font-size: 16px; opacity: 0.85; line-height: 1.9; max-width: 700px; margin: 0 auto; }
+    .summary .points {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 36px;
+      flex-wrap: wrap;
+    }
+    .summary .point { text-align: center; }
+    .summary .point .num { font-size: 36px; font-weight: 800; color: #7ecfff; }
+    .summary .point .label { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #aaa;
+      font-size: 13px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    @media (max-width: 768px) {
+      header h1 { font-size: 32px; }
+      .what-grid, .trio, .cases, .compare, .terms { grid-template-columns: 1fr; }
+      .what-card.highlight { grid-column: span 1; }
+      .summary { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">AI BASICS</div>
+  <h1>인공지능(AI) 기초</h1>
+  <p>AI가 무엇인지, 어떻게 작동하는지, 어디에 쓰이는지 한 페이지로 이해하기</p>
+</header>
+
+<div class="container">
+
+  <!-- 1. AI란 무엇인가 -->
+  <section>
+    <h2><span class="icon">1</span> AI란 무엇인가?</h2>
+    <div class="what-grid">
+      <div class="what-card highlight">
+        <h3>한 줄 정의</h3>
+        <p>AI(인공지능, Artificial Intelligence)란 <strong>사람처럼 생각하고 판단하고 학습할 수 있도록 만든 컴퓨터 프로그램</strong>입니다. 과거에는 사람이 규칙을 하나하나 입력했지만, 지금의 AI는 스스로 데이터를 보고 패턴을 찾아 배웁니다.</p>
+      </div>
+      <div class="what-card">
+        <h3>전통적인 프로그램</h3>
+        <p>사람이 규칙을 직접 코딩<br>→ 정해진 답만 출력<br>→ 새로운 상황에 대응 어려움</p>
+      </div>
+      <div class="what-card">
+        <h3>AI 프로그램</h3>
+        <p>데이터에서 스스로 규칙을 학습<br>→ 새로운 상황도 판단<br>→ 사용할수록 똑똑해짐</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. AI 3대 핵심 요소 -->
+  <section>
+    <h2><span class="icon">2</span> AI를 만드는 3가지 핵심 요소</h2>
+    <div class="trio">
+      <div class="trio-card">
+        <div class="emoji">📊</div>
+        <h3>데이터 (Data)</h3>
+        <p>AI가 학습하는 재료입니다. 사진, 텍스트, 숫자, 소리 등 다양한 형태의 데이터가 많을수록 AI가 더 잘 학습합니다.</p>
+      </div>
+      <div class="trio-card">
+        <div class="emoji">🧠</div>
+        <h3>알고리즘 (Algorithm)</h3>
+        <p>데이터에서 패턴을 찾는 방법입니다. 딥러닝, 머신러닝 등 다양한 학습 방법이 있습니다.</p>
+      </div>
+      <div class="trio-card">
+        <div class="emoji">💻</div>
+        <h3>컴퓨팅 파워</h3>
+        <p>AI 학습에는 엄청난 계산이 필요합니다. GPU 같은 고성능 하드웨어가 이를 가능하게 합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. AI 종류 -->
+  <section>
+    <h2><span class="icon">3</span> AI의 주요 종류</h2>
+    <div class="type-list">
+      <div class="type-item">
+        <div class="type-num">1</div>
+        <div>
+          <h3>머신러닝 (Machine Learning)</h3>
+          <p>데이터를 분석해 스스로 학습하고 예측하는 AI. 넷플릭스 추천, 스팸 메일 필터링에 사용됩니다.</p>
+          <span class="tag">추천 시스템</span><span class="tag">분류</span><span class="tag">예측</span>
+        </div>
+      </div>
+      <div class="type-item">
+        <div class="type-num">2</div>
+        <div>
+          <h3>딥러닝 (Deep Learning)</h3>
+          <p>인간 뇌의 신경망을 모방한 AI. 이미지 인식, 음성 인식, 자율주행에 핵심적으로 쓰입니다.</p>
+          <span class="tag">이미지 인식</span><span class="tag">음성 인식</span><span class="tag">자율주행</span>
+        </div>
+      </div>
+      <div class="type-item">
+        <div class="type-num">3</div>
+        <div>
+          <h3>자연어 처리 (NLP)</h3>
+          <p>사람의 말과 글을 이해하고 생성하는 AI. ChatGPT, 번역기, 챗봇이 대표적입니다.</p>
+          <span class="tag">챗봇</span><span class="tag">번역</span><span class="tag">요약</span>
+        </div>
+      </div>
+      <div class="type-item">
+        <div class="type-num">4</div>
+        <div>
+          <h3>생성형 AI (Generative AI)</h3>
+          <p>텍스트, 이미지, 음악 등 새로운 콘텐츠를 만들어내는 AI. ChatGPT, DALL-E, Midjourney가 여기에 해당합니다.</p>
+          <span class="tag">글쓰기</span><span class="tag">이미지 생성</span><span class="tag">코드 작성</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 활용 사례 -->
+  <section>
+    <h2><span class="icon">4</span> AI 활용 사례</h2>
+    <div class="cases">
+      <div class="case-card">
+        <div class="icon">🏥</div>
+        <h3>의료</h3>
+        <p>X-ray·CT 분석, 암 조기 진단, 신약 개발 가속화</p>
+      </div>
+      <div class="case-card">
+        <div class="icon">🚗</div>
+        <h3>자동차</h3>
+        <p>자율주행, 충돌 감지, 운전 보조 시스템</p>
+      </div>
+      <div class="case-card">
+        <div class="icon">🛍️</div>
+        <h3>쇼핑</h3>
+        <p>개인 맞춤 상품 추천, 수요 예측, 재고 관리</p>
+      </div>
+      <div class="case-card">
+        <div class="icon">💬</div>
+        <h3>고객 서비스</h3>
+        <p>24시간 챗봇 상담, 자동 응답, 감성 분석</p>
+      </div>
+      <div class="case-card">
+        <div class="icon">📱</div>
+        <h3>일상</h3>
+        <p>얼굴 인식 잠금해제, 사진 자동 보정, 음성 비서</p>
+      </div>
+      <div class="case-card">
+        <div class="icon">💼</div>
+        <h3>업무</h3>
+        <p>문서 요약, 회의록 자동 작성, 코드 자동 완성</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. AI vs 인간 -->
+  <section>
+    <h2><span class="icon">5</span> AI가 잘하는 것 vs 인간이 잘하는 것</h2>
+    <div class="compare">
+      <div class="compare-card ai">
+        <h3>🤖 AI가 잘하는 것</h3>
+        <ul>
+          <li>대용량 데이터 빠른 처리</li>
+          <li>반복 작업을 지치지 않고 수행</li>
+          <li>패턴 인식과 예측</li>
+          <li>24시간 중단 없이 작동</li>
+          <li>수치·통계 기반 판단</li>
+        </ul>
+      </div>
+      <div class="compare-card human">
+        <h3>🙋 인간이 잘하는 것</h3>
+        <ul>
+          <li>창의적 아이디어와 감성</li>
+          <li>도덕적·윤리적 판단</li>
+          <li>관계와 공감 형성</li>
+          <li>경험 기반 직관</li>
+          <li>전혀 새로운 상황 적응</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. 핵심 용어 -->
+  <section>
+    <h2><span class="icon">6</span> 꼭 알아야 할 핵심 용어</h2>
+    <div class="terms">
+      <div class="term-card">
+        <h3>모델 (Model)</h3>
+        <p>AI가 데이터를 학습한 결과물. 입력을 받아 출력을 내보내는 '두뇌' 역할을 합니다.</p>
+      </div>
+      <div class="term-card">
+        <h3>학습 (Training)</h3>
+        <p>AI가 데이터를 보고 패턴을 익히는 과정. 사람이 공부하는 것과 비슷합니다.</p>
+      </div>
+      <div class="term-card">
+        <h3>프롬프트 (Prompt)</h3>
+        <p>AI에게 주는 지시문 또는 질문. 프롬프트를 잘 쓸수록 더 좋은 결과를 얻습니다.</p>
+      </div>
+      <div class="term-card">
+        <h3>할루시네이션 (Hallucination)</h3>
+        <p>AI가 사실이 아닌 내용을 사실처럼 답하는 현상. AI 사용 시 반드시 검증이 필요합니다.</p>
+      </div>
+      <div class="term-card">
+        <h3>LLM (대형 언어 모델)</h3>
+        <p>방대한 텍스트를 학습한 AI 모델. ChatGPT, Claude, Gemini 등이 여기에 해당합니다.</p>
+      </div>
+      <div class="term-card">
+        <h3>파인튜닝 (Fine-tuning)</h3>
+        <p>기존 AI 모델을 특정 목적에 맞게 추가로 학습시키는 것. 전문 분야 특화에 사용됩니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 요약 -->
+  <div class="summary">
+    <h2>핵심 정리</h2>
+    <p>AI는 데이터를 학습해 스스로 판단하는 기술입니다. 이미 우리 일상 곳곳에 녹아들어 있으며, 잘 활용하면 업무 효율을 크게 높일 수 있습니다. AI를 두려워하기보다 <strong>도구로서 잘 쓰는 능력</strong>이 앞으로 가장 중요한 역량이 됩니다.</p>
+    <div class="points">
+      <div class="point">
+        <div class="num">3</div>
+        <div class="label">핵심 요소<br>데이터·알고리즘·컴퓨팅</div>
+      </div>
+      <div class="point">
+        <div class="num">4</div>
+        <div class="label">주요 AI 종류<br>ML·딥러닝·NLP·생성형</div>
+      </div>
+      <div class="point">
+        <div class="num">6</div>
+        <div class="label">활용 분야<br>의료·자동차·쇼핑 등</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>AI 기초 설명 자료 · 2026-05-13</p>
+</footer>
+
+</body>
+</html>

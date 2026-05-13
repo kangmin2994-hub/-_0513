@@ -35,30 +35,58 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F8F8' }}>
-      <Header location="우리 동네" showSearch showBell />
-
-      {/* 카테고리 필터 */}
+      {/* 타이틀 헤더 */}
       <div style={{
         background: 'white', borderBottom: '1px solid #EBEBEB',
-        overflowX: 'auto', display: 'flex',
-        padding: '12px 16px', whiteSpace: 'nowrap',
+        padding: '12px 16px 8px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        {[{ id: null, name: '전체', icon: '🏠' }, ...categories].map(cat => (
-          <button
-            key={cat.id ?? 'all'}
-            onClick={() => setSelectedCategory(cat.id)}
-            style={{
-              flexShrink: 0, border: 'none', borderRadius: 20,
-              padding: '6px 14px', fontSize: 13, cursor: 'pointer',
-              background: selectedCategory === cat.id ? '#FF6B35' : '#F4F4F4',
-              color: selectedCategory === cat.id ? 'white' : '#1A1A1A',
-              fontWeight: selectedCategory === cat.id ? 700 : 400,
-              marginRight: 8,
-            }}
-          >
-            {cat.icon} {cat.name}
-          </button>
-        ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 26 }}>🍠</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: '#FF6B35', letterSpacing: '-0.5px' }}>고구마마켓</span>
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔍</button>
+          <button style={{ border: 'none', background: 'none', padding: 8, cursor: 'pointer', fontSize: 20 }}>🔔</button>
+        </div>
+      </div>
+
+      {/* 카테고리 그리드 */}
+      <div style={{ background: 'white', borderBottom: '1px solid #EBEBEB', padding: '12px 8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4 }}>
+          {[{ id: null, name: '전체', icon: '🏠' }, ...categories].map(cat => {
+            const active = selectedCategory === cat.id
+            return (
+              <button
+                key={cat.id ?? 'all'}
+                onClick={() => setSelectedCategory(cat.id)}
+                style={{
+                  border: 'none', background: 'none', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                  padding: '10px 4px', borderRadius: 10,
+                  background: active ? '#FFF0EB' : 'transparent',
+                }}
+              >
+                <div style={{
+                  width: 48, height: 48, borderRadius: 14,
+                  background: active ? '#FF6B35' : '#F4F4F4',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 22,
+                  boxShadow: active ? '0 2px 8px rgba(255,107,53,0.35)' : 'none',
+                }}>
+                  {cat.icon}
+                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: active ? 700 : 400,
+                  color: active ? '#FF6B35' : '#555',
+                  textAlign: 'center', lineHeight: 1.2,
+                }}>
+                  {cat.name}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* 상품 목록 */}

@@ -120,7 +120,7 @@ export default function MyPage() {
       {/* 메뉴 */}
       <div style={{ background: 'white', marginBottom: 8 }}>
         {[
-          { icon: Package, label: '판매 내역', href: '/mypage' },
+          { icon: Package, label: '판매 내역', href: '/mypage/trades' },
           { icon: Heart, label: '관심 목록', href: '/mypage/likes' },
           { icon: Star, label: '받은 후기', href: '/mypage/reviews' },
         ].map(({ icon: Icon, label, href }) => (
